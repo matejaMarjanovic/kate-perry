@@ -11,6 +11,9 @@ class Main(QtGui.QMainWindow):
         
         
         self._name = None
+        # dirty trick ;)
+        self.line = 1
+        self.col = 1
         
         # set the text editor object on the window
         self.editor = QtGui.QTextEdit()
@@ -23,10 +26,11 @@ class Main(QtGui.QMainWindow):
     def changeCursor(self):
         cursorPos = self.editor.textCursor()
         
-        line = cursorPos.blockNumber() + 1
-        col = cursorPos.columnNumber() + 1
+        self.line = cursorPos.blockNumber() + 1
+        self.col = cursorPos.columnNumber() + 1
         
-        self.statusbar.showMessage("Line %d, Column %d" % (line, col))
+        # needs fixing, when the mouse is on File or Edit... this message doesn't appear
+        self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
     
     def fileSavingAs(self):
         name = QtGui.QFileDialog.getSaveFileName(self, "Save file")
@@ -54,12 +58,27 @@ class Main(QtGui.QMainWindow):
         self._name = name
     
     def home(self):
+        self.initStatusBar()
         self.initMenu()
-        self.statusbar = self.statusBar()
-        
-        self.formatbar = self.addToolBar("Format")
+
+        # nothing for now, maybe we will add icons like Open, New, Save...
+        #self.formatbar = self.addToolBar("Format")
         
         self.show()
+    
+    def initStatusBar(self):
+        self.statusbar = self.statusBar()
+        # a dirty trick so that the program writes Line 1, Column 1 in the begging
+        self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
+        self.languageList = QtGui.QComboBox()
+        self.languageList.addItems(["Plain Text", "C", "C++", "Java"])
+        self.languageList.activated.connect(self.changeLanguage)
+        self.statusbar.addPermanentWidget(self.languageList)
+    
+    # probably only one of these will have autocompletion for now
+    def changeLanguage(self):
+        # set the autocompletion for the chosen language
+        print self.languageList.currentText()
     
     def openFileAction(self):
         # open file action
@@ -104,32 +123,38 @@ class Main(QtGui.QMainWindow):
         redoAction.triggered.connect(self.editor.redo)
         return redoAction
     
-    def initMenu(self):
-        # add actions to the file drop menu
-        
-        # file actions
-        openFileAction = self.openFileAction()
-        saveFileAction = self.saveFileAction()
-        saveAsFileAction = self.saveAsFileAction()
-        exitAction = self.exitAction()
-        
-        # edit actions
-        undoAction = self.undoAction()
-        redoAction = self.redoAction()
-        
-        # now create the file drop menu and push all the actions in
+    def copyAction(self):
+        copyAction = QtGui.QAction("Copy to clipboard", self)
+        copyAction.setShortcut("Ctrl+C")
+        copyAction.triggered.connect(self.editor.copy)
+        return copyAction
+    
+    def pasteAction(self):
+        pasteAction = QtGui.QAction("Paste from clipboard", self)
+        pasteAction.setShortcut("Ctrl+C")
+        pasteAction.triggered.connect(self.editor.paste)
+        return pasteAction
+    
+    def initMenu(self):        
+        # create the file drop menu and push all the actions in
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu("File")
-        fileMenu.addAction(openFileAction)
-        fileMenu.addAction(saveFileAction)
-        fileMenu.addAction(saveAsFileAction)
-        fileMenu.addAction(exitAction)
+        fileMenu.addAction(self.openFileAction())
+        fileMenu.addAction(self.saveFileAction())
+        fileMenu.addAction(self.saveAsFileAction())
+        fileMenu.addAction(self.exitAction())
         
         editMenu = mainMenu.addMenu("Edit")
-        editMenu.addAction(undoAction)
-        editMenu.addAction(redoAction)
+        editMenu.addAction(self.undoAction())
+        editMenu.addAction(self.redoAction())
+        editMenu.addAction(self.copyAction())
+        editMenu.addAction(self.pasteAction())
         
+        # TODO
         viewMenu = mainMenu.addMenu("View")
+        
+        # TODO
+        optionsMenu = mainMenu.addMenu("Options")
         
     def closeApp(self):
         if self.editor.toPlainText() != "":
