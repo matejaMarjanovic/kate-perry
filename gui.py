@@ -14,6 +14,10 @@ class Main(QtGui.QMainWindow):
 		self.line = 1
 		self.col = 1
 		
+		# variables for keyboard events
+		self.keylist = []
+		self.firstrelease = False
+		
 		# set the text editor object on the window
 		self.editor = QtGui.QTextEdit()
 		self.setCentralWidget(self.editor)
@@ -105,8 +109,6 @@ class Main(QtGui.QMainWindow):
 		# save as file action
 		saveAsFileAction = QtGui.QAction("Save As", self)
 		saveAsFileAction.setIcon(QtGui.QIcon('save_as.png'))
-		# TODO needs fixing, ambiguous shortcut overload
-		saveAsFileAction.setShortcut("Ctrl+Shift+S")
 		saveAsFileAction.setStatusTip("Save File")
 		saveAsFileAction.triggered.connect(self.fileSavingAs)
 		return saveAsFileAction
@@ -115,8 +117,6 @@ class Main(QtGui.QMainWindow):
 		# save file action
 		saveFileAction = QtGui.QAction("Save", self)
 		saveFileAction.setIcon(QtGui.QIcon('save.png'))
-		# TODO needs fixing, ambiguous shortcut overload
-		saveFileAction.setShortcut("Ctrl+S")
 		saveFileAction.setStatusTip("Save File")
 		saveFileAction.triggered.connect(self.fileSaving)
 		return saveFileAction
@@ -164,6 +164,34 @@ class Main(QtGui.QMainWindow):
 		selectAllAction.setShortcut("Ctrl+A")
 		selectAllAction.triggered.connect(self.editor.selectAll)
 		return selectAllAction
+	
+	# keyboard event handler
+	def keyPressEvent(self, event):
+		# closing
+		if event.key() == QtCore.Qt.Key_Escape:
+			qmessage = QtGui.QMessageBox.question(self, "Quit Kate Perry", "Are you sure you want to quit?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+			if qmessage == QtGui.QMessageBox.Yes:
+				self.close()
+			else:
+				pass
+		# multiple event listening
+		else:
+			self.firstrelease = True
+			self.keylist.append(event.key())
+
+	def keyReleaseEvent(self, event):
+		if self.firstrelease == True: 
+			self.processmultikeys(self.keylist)
+
+		self.firstrelease = False
+	# solves the problem of an ambiguous shortcut
+	def processmultikeys(self,keyspressed):
+		if QtCore.Qt.Key_Shift in keyspressed and QtCore.Qt.Key_S in keyspressed and QtCore.Qt.Key_Control in keyspressed:
+			self.fileSavingAs()
+		elif QtCore.Qt.Key_S in keyspressed and QtCore.Qt.Key_Control in keyspressed:
+			self.fileSaving()
+		self.keylist = []
+		print keyspressed
 	
 	def initMenu(self):        
 		# create the file drop menu and push all the actions in
