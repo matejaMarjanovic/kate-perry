@@ -88,7 +88,11 @@ class Main(QtGui.QMainWindow):
 				
 	def setDark(self):
 		with open("./styles/dark.css", "r") as f:
-			self.editor.setStyleSheet(f.read())
+			self.setStyleSheet(f.read())
+			
+	def setSky(self):
+		with open("./styles/sky.css", "r") as f:
+			self.setStyleSheet(f.read())
 	
 	def home(self):
 		self.initStatusBar()
@@ -199,6 +203,11 @@ class Main(QtGui.QMainWindow):
 		darkAction = QtGui.QAction("Dark", self)
 		darkAction.triggered.connect(self.setDark)
 		return darkAction
+	
+	def skyAction(self):
+		skyAction = QtGui.QAction("Sky Blue", self)
+		skyAction.triggered.connect(self.setSky)
+		return skyAction
 
 	
 	# keyboard event handler
@@ -254,6 +263,7 @@ class Main(QtGui.QMainWindow):
 		
 		appearancesMenu = mainMenu.addMenu("Appearances")
 		appearancesMenu.addAction(self.darkAction())
+		appearancesMenu.addAction(self.skyAction())
 		
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")

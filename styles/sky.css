@@ -1,14 +1,14 @@
 QTextEdit 
 {
-	background-color: black;
-	color: white;
-	selection-background-color: gray;
+	background-color: rgb(50, 150, 255);
+	color: gray;
+	selection-background-color: black;
 	selection-color: white;
 }
 
 QComboBox 
 {
-	background-color: rgb(55, 55, 150);
+	background-color: white;
 	color: black;
 	selection-background-color: rgb(150, 55, 150);
 	selection-color: white;
@@ -16,6 +16,6 @@ QComboBox
 
 QStatusBar
 {
-	background-color: black;
+	background-color: white;
 	color: gray;
 }
