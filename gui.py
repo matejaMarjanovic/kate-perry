@@ -79,6 +79,12 @@ class Main(QtGui.QMainWindow):
 		self.editor.setText("")
 		self._name = name
 		self.updateWindowTitle()
+		
+	def htmlConversion(self):
+		if self._name != None:
+			htmlFileName = self._name.split(".")[0] + ".html"
+			with open(htmlFileName, "w") as f:
+				f.write(self.editor.toHtml())
 	
 	def home(self):
 		self.initStatusBar()
@@ -180,6 +186,11 @@ class Main(QtGui.QMainWindow):
 		selectAllAction.triggered.connect(self.editor.selectAll)
 		return selectAllAction
 	
+	def htmlAction(self):
+		htmlAction = QtGui.QAction("Export to HTML", self)
+		htmlAction.triggered.connect(self.htmlConversion)
+		return htmlAction
+	
 	# keyboard event handler
 	def keyPressEvent(self, event):
 		# closing
@@ -228,8 +239,8 @@ class Main(QtGui.QMainWindow):
 		# TODO
 		viewMenu = mainMenu.addMenu("View")
 		
-		# TODO
 		optionsMenu = mainMenu.addMenu("Options")
+		optionsMenu.addAction(self.htmlAction())
 		
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")
