@@ -85,6 +85,10 @@ class Main(QtGui.QMainWindow):
 			htmlFileName = self._name.split(".")[0] + ".html"
 			with open(htmlFileName, "w") as f:
 				f.write(self.editor.toHtml())
+				
+	def setDark(self):
+		with open("./styles/dark.css", "r") as f:
+			self.editor.setStyleSheet(f.read())
 	
 	def home(self):
 		self.initStatusBar()
@@ -191,6 +195,12 @@ class Main(QtGui.QMainWindow):
 		htmlAction.triggered.connect(self.htmlConversion)
 		return htmlAction
 	
+	def darkAction(self):
+		darkAction = QtGui.QAction("Dark", self)
+		darkAction.triggered.connect(self.setDark)
+		return darkAction
+
+	
 	# keyboard event handler
 	def keyPressEvent(self, event):
 		# closing
@@ -241,6 +251,9 @@ class Main(QtGui.QMainWindow):
 		
 		optionsMenu = mainMenu.addMenu("Options")
 		optionsMenu.addAction(self.htmlAction())
+		
+		appearancesMenu = mainMenu.addMenu("Appearances")
+		appearancesMenu.addAction(self.darkAction())
 		
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")
