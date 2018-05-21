@@ -25,6 +25,9 @@ class Main(QtGui.QMainWindow):
 		self.editor.cursorPositionChanged.connect(self.changeCursor)
 		
 		self.home()
+		
+	def updateWindowTitle(self):
+		self.setWindowTitle("%s --- Kate Perry" % self._name)
 	
 	def changeCursor(self):
 		cursorPos = self.editor.textCursor()
@@ -37,11 +40,16 @@ class Main(QtGui.QMainWindow):
 	
 	def fileSavingAs(self):
 		name = QtGui.QFileDialog.getSaveFileName(self, "Save file")
+		self._name = name
 			
 		# needs to know if the current version of the file is saved
 		with open(name, "w+") as f:
 			text = self.editor.toPlainText()
 			f.write(text)
+			
+		# fetches file name from absolute path
+		self._name = name.split("/")[-1]
+		self.updateWindowTitle()
 	
 	def fileSaving(self):
 		if self._name == None:
@@ -52,18 +60,25 @@ class Main(QtGui.QMainWindow):
 		with open(self._name, "w+") as f:
 			text = self.editor.toPlainText()
 			f.write(text)
+			
+		# fetches file name from absolute path
+		self._name = self._name.split("/")[-1]
+		self.updateWindowTitle()
 	
 	def fileOpening(self):
 		name = QtGui.QFileDialog.getOpenFileName(self, "Open file")
 		with open(name, "r") as f:
 			text = f.read()
 			self.editor.setText(text)
-		self._name = name
+		# fetches file name from absolute path
+		self._name = name.split("/")[-1]
+		self.updateWindowTitle()
 		
 	def fileCreating(self):
 		name = None
 		self.editor.setText("")
 		self._name = name
+		self.updateWindowTitle()
 	
 	def home(self):
 		self.initStatusBar()
@@ -191,7 +206,6 @@ class Main(QtGui.QMainWindow):
 		elif QtCore.Qt.Key_S in keyspressed and QtCore.Qt.Key_Control in keyspressed:
 			self.fileSaving()
 		self.keylist = []
-		print keyspressed
 	
 	def initMenu(self):        
 		# create the file drop menu and push all the actions in
