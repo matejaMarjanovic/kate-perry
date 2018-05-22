@@ -1,5 +1,6 @@
 import sys
 from PyQt4 import QtGui, QtCore
+from pyqterm import TerminalWidget
 
 class Main(QtGui.QMainWindow):
 	def __init__(self):
@@ -53,6 +54,7 @@ class Main(QtGui.QMainWindow):
 		self.updateWindowTitle()
 	
 	def fileSaving(self):
+		self.scanKeyword()
 		if self._name == None:
 			self.fileSavingAs()
 			return
@@ -87,6 +89,11 @@ class Main(QtGui.QMainWindow):
 			htmlFileName = self._name.split(".")[0] + ".html"
 			with open(htmlFileName, "w") as f:
 				f.write(self.editor.toHtml())
+				
+	def termMode(self):
+		choice = QtGui.QMessageBox.question(self, "Warning", "Are you sure you want to change mode to terminal?",
+											QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		self.setCentralWidget(TerminalWidget())
 				
 	def setDark(self):
 		with open("./styles/dark.css", "r") as f:
@@ -209,6 +216,11 @@ class Main(QtGui.QMainWindow):
 		htmlAction.triggered.connect(self.htmlConversion)
 		return htmlAction
 	
+	def terminalAction(self):
+		terminalAction = QtGui.QAction("Terminal Mode", self)
+		terminalAction.triggered.connect(self.termMode)
+		return terminalAction
+	
 	def darkAction(self):
 		darkAction = QtGui.QAction("Dark", self)
 		darkAction.triggered.connect(self.setDark)
@@ -248,11 +260,9 @@ class Main(QtGui.QMainWindow):
 		editMenu.addAction(self.cutAction())
 		editMenu.addAction(self.selectAllAction())	
 		
-		# TODO
-		viewMenu = mainMenu.addMenu("View")
-		
 		optionsMenu = mainMenu.addMenu("Options")
 		optionsMenu.addAction(self.htmlAction())
+		optionsMenu.addAction(self.terminalAction())
 		
 		appearancesMenu = mainMenu.addMenu("Appearances")
 		appearancesMenu.addAction(self.basicAction())
