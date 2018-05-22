@@ -164,12 +164,14 @@ class Main(QtGui.QMainWindow):
 	def undoAction(self):
 		undoAction = QtGui.QAction("Undo", self)
 		undoAction.setShortcut("Ctrl+Z")
+		undoAction.setIcon(QtGui.QIcon('undo.png'))
 		undoAction.triggered.connect(self.editor.undo)
 		return undoAction
 	
 	def redoAction(self):
 		redoAction = QtGui.QAction("Redo", self)
 		redoAction.setShortcut("Ctrl+Shift+Z")
+		redoAction.setIcon(QtGui.QIcon('redo.png'))
 		redoAction.triggered.connect(self.editor.redo)
 		return redoAction
 	
@@ -227,8 +229,10 @@ class Main(QtGui.QMainWindow):
 		fileMenu.addAction(self.exitAction())
 		
 		editMenu = mainMenu.addMenu("Edit")
-		editMenu.addAction(self.undoAction())
-		editMenu.addAction(self.redoAction())
+		self._undo = self.undoAction()
+		self._redo = self.redoAction()
+		editMenu.addAction(self._undo)
+		editMenu.addAction(self._redo)
 		editMenu.addAction(self.copyAction())
 		editMenu.addAction(self.pasteAction())
 		editMenu.addAction(self.cutAction())
@@ -248,8 +252,12 @@ class Main(QtGui.QMainWindow):
 		toolbar = self.addToolBar("Format")
 		toolbar.addAction(self._newFile)
 		toolbar.addAction(self._openFile)
+		toolbar.addSeparator()
 		toolbar.addAction(self._saveFile)
 		toolbar.addAction(self._saveAsFile)
+		toolbar.addSeparator()
+		toolbar.addAction(self._undo)
+		toolbar.addAction(self._redo)
 		
 	def closeApp(self):
 		if self.editor.toPlainText() != self._currentSavedText:
