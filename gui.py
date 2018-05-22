@@ -10,7 +10,6 @@ class Main(QtGui.QMainWindow):
 		self.setWindowTitle("%s * Kate Perry" % self._name)
 		self.setWindowIcon(QtGui.QIcon("katePerryIcon.jpg"))
 	
-		# dirty trick ;)
 		self.line = 1
 		self.col = 1
 		
@@ -27,7 +26,7 @@ class Main(QtGui.QMainWindow):
 		self.home()
 		
 	def updateWindowTitle(self):
-		self.setWindowTitle("%s --- Kate Perry" % self._name)
+		self.setWindowTitle("%s --- Kate Perry" % self._name.split("/")[-1])
 	
 	def changeCursor(self):
 		cursorPos = self.editor.textCursor()
@@ -48,7 +47,8 @@ class Main(QtGui.QMainWindow):
 			f.write(text)
 			
 		# fetches file name from absolute path
-		self._name = name.split("/")[-1]
+		#self._name = name.split("/")[-1]
+		self._currentSavedText = self.editor.toPlainText()
 		self.updateWindowTitle()
 	
 	def fileSaving(self):
@@ -62,8 +62,8 @@ class Main(QtGui.QMainWindow):
 			f.write(text)
 			
 		# fetches file name from absolute path
-		self._name = self._name.split("/")[-1]
 		self.updateWindowTitle()
+		self._currentSavedText = self.editor.toPlainText()
 	
 	def fileOpening(self):
 		name = QtGui.QFileDialog.getOpenFileName(self, "Open file")
@@ -71,7 +71,8 @@ class Main(QtGui.QMainWindow):
 			text = f.read()
 			self.editor.setText(text)
 		# fetches file name from absolute path
-		self._name = name.split("/")[-1]
+		self._currentSavedText = self.editor.toPlainText()
+		self._name = name
 		self.updateWindowTitle()
 		
 	def fileCreating(self):
@@ -138,7 +139,8 @@ class Main(QtGui.QMainWindow):
 		# save as file action
 		saveAsFileAction = QtGui.QAction("Save As", self)
 		saveAsFileAction.setIcon(QtGui.QIcon('save_as.png'))
-		saveAsFileAction.setStatusTip("Save File")
+		saveAsFileAction.setShortcut("Ctrl+Shift+S")
+		saveAsFileAction.setStatusTip("Save As File")
 		saveAsFileAction.triggered.connect(self.fileSavingAs)
 		return saveAsFileAction
 	
@@ -146,6 +148,7 @@ class Main(QtGui.QMainWindow):
 		# save file action
 		saveFileAction = QtGui.QAction("Save", self)
 		saveFileAction.setIcon(QtGui.QIcon('save.png'))
+		saveFileAction.setShortcut("Ctrl+S")
 		saveFileAction.setStatusTip("Save File")
 		saveFileAction.triggered.connect(self.fileSaving)
 		return saveFileAction
@@ -208,43 +211,19 @@ class Main(QtGui.QMainWindow):
 		skyAction = QtGui.QAction("Sky Blue", self)
 		skyAction.triggered.connect(self.setSky)
 		return skyAction
-
-	
-	# keyboard event handler
-	def keyPressEvent(self, event):
-		# closing
-		if event.key() == QtCore.Qt.Key_Escape:
-			qmessage = QtGui.QMessageBox.question(self, "Quit Kate Perry", "Are you sure you want to quit?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-			if qmessage == QtGui.QMessageBox.Yes:
-				self.close()
-			else:
-				pass
-		# multiple event listening
-		else:
-			self.firstrelease = True
-			self.keylist.append(event.key())
-
-	def keyReleaseEvent(self, event):
-		if self.firstrelease == True: 
-			self.processmultikeys(self.keylist)
-
-		self.firstrelease = False
-	# solves the problem of an ambiguous shortcut
-	def processmultikeys(self,keyspressed):
-		if QtCore.Qt.Key_Shift in keyspressed and QtCore.Qt.Key_S in keyspressed and QtCore.Qt.Key_Control in keyspressed:
-			self.fileSavingAs()
-		elif QtCore.Qt.Key_S in keyspressed and QtCore.Qt.Key_Control in keyspressed:
-			self.fileSaving()
-		self.keylist = []
 	
 	def initMenu(self):        
 		# create the file drop menu and push all the actions in
 		mainMenu = self.menuBar()
 		fileMenu = mainMenu.addMenu("File")
-		fileMenu.addAction(self.newFileAction())
-		fileMenu.addAction(self.openFileAction())
-		fileMenu.addAction(self.saveFileAction())
-		fileMenu.addAction(self.saveAsFileAction())
+		self._newFile = self.newFileAction()
+		self._openFile = self.openFileAction()
+		self._saveFile = self.saveFileAction()
+		self._saveAsFile = self.saveAsFileAction()
+		fileMenu.addAction(self._newFile)
+		fileMenu.addAction(self._openFile)
+		fileMenu.addAction(self._saveFile)
+		fileMenu.addAction(self._saveAsFile)
 		fileMenu.addAction(self.exitAction())
 		
 		editMenu = mainMenu.addMenu("Edit")
@@ -267,13 +246,13 @@ class Main(QtGui.QMainWindow):
 		
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")
-		toolbar.addAction(self.newFileAction())
-		toolbar.addAction(self.openFileAction())
-		toolbar.addAction(self.saveFileAction())
-		toolbar.addAction(self.saveAsFileAction())
+		toolbar.addAction(self._newFile)
+		toolbar.addAction(self._openFile)
+		toolbar.addAction(self._saveFile)
+		toolbar.addAction(self._saveAsFile)
 		
 	def closeApp(self):
-		if self.editor.toPlainText() != "":
+		if self.editor.toPlainText() != self._currentSavedText:
 			choice = QtGui.QMessageBox.question(self, "Please don't leave", "Are you sure you want to leave without saving",
 											QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 			if choice == QtGui.QMessageBox.Yes:
