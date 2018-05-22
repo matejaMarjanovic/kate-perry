@@ -4,25 +4,26 @@ from pyqterm import TerminalWidget
 
 class Main(QtGui.QMainWindow):
 	def __init__(self):
-		# initializing the window using the super constructor
+		# standard initialization
 		super(Main, self).__init__()
 		self.setGeometry(50, 50, 800, 500)
 		self._name = None
 		self.setWindowTitle("%s * Kate Perry" % self._name)
 		self.setWindowIcon(QtGui.QIcon("katePerryIcon.jpg"))
+		
+		# initial theme
 		self.setBasic()
-	
+		
+		# for the staus bar
 		self.line = 1
 		self.col = 1
 		
-		# variables for keyboard events
-		self.keylist = []
-		self.firstrelease = False
+		# so the user can exit the app before he starts writing text
+		self._currentSavedText = ""
 		
 		# set the text editor object on the window
 		self.editor = QtGui.QTextEdit()
 		self.setCentralWidget(self.editor)
-		
 		self.editor.cursorPositionChanged.connect(self.changeCursor)
 		
 		self.home()
@@ -48,13 +49,11 @@ class Main(QtGui.QMainWindow):
 			text = self.editor.toPlainText()
 			f.write(text)
 			
-		# fetches file name from absolute path
-		#self._name = name.split("/")[-1]
+		# fetches file name path
 		self._currentSavedText = self.editor.toPlainText()
 		self.updateWindowTitle()
 	
 	def fileSaving(self):
-		self.scanKeyword()
 		if self._name == None:
 			self.fileSavingAs()
 			return
@@ -64,7 +63,6 @@ class Main(QtGui.QMainWindow):
 			text = self.editor.toPlainText()
 			f.write(text)
 			
-		# fetches file name from absolute path
 		self.updateWindowTitle()
 		self._currentSavedText = self.editor.toPlainText()
 	
@@ -86,45 +84,54 @@ class Main(QtGui.QMainWindow):
 		
 	def htmlConversion(self):
 		if self._name != None:
+            # create a new file with a html extension
 			htmlFileName = self._name.split(".")[0] + ".html"
 			with open(htmlFileName, "w") as f:
 				f.write(self.editor.toHtml())
-				
+
+	# go to console mode
 	def termMode(self):
-		choice = QtGui.QMessageBox.question(self, "Warning", "Are you sure you want to change mode to terminal?",
-											QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		self.setCentralWidget(TerminalWidget())
-				
+	
+	# go to initial text edit mode
+	def editMode(self):	
+		self.editor = QtGui.QTextEdit()
+		self.setCentralWidget(self.editor)
+		self.editor.cursorPositionChanged.connect(self.changeCursor)
+	
+	# theme
 	def setDark(self):
 		with open("./styles/dark.css", "r") as f:
 			self.setStyleSheet(f.read())
-			
+	
+	# theme
 	def setSky(self):
 		with open("./styles/sky.css", "r") as f:
 			self.setStyleSheet(f.read())
-			
+	
+	# theme
 	def setBasic(self):
 		with open("./styles/basic.css", "r") as f:
 			self.setStyleSheet(f.read())
 	
+	# add the main features
 	def home(self):
 		self.initStatusBar()
 		self.initMenu()
-
-		self.initFormatbar()
-		
+		self.initFormatbar()	
 		self.show()
 	
 	def initStatusBar(self):
 		self.statusbar = self.statusBar()
 		# a dirty trick so that the program writes Line 1, Column 1 in the begging
 		self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
+		
+		# does nothing :(
 		self.languageList = QtGui.QComboBox()
 		self.languageList.addItems(["Plain Text", "C", "C++", "Java"])
 		self.languageList.activated.connect(self.changeLanguage)
 		self.statusbar.addPermanentWidget(self.languageList)
 	
-	# probably only one of these will have autocompletion for now
 	def changeLanguage(self):
 		# set the autocompletion for the chosen language
 		print self.languageList.currentText()
@@ -220,6 +227,11 @@ class Main(QtGui.QMainWindow):
 		terminalAction = QtGui.QAction("Terminal Mode", self)
 		terminalAction.triggered.connect(self.termMode)
 		return terminalAction
+    
+	def editAction(self):
+		editAction = QtGui.QAction("Edit Mode", self)
+		editAction.triggered.connect(self.editMode)
+		return editAction
 	
 	def darkAction(self):
 		darkAction = QtGui.QAction("Dark", self)
@@ -263,6 +275,7 @@ class Main(QtGui.QMainWindow):
 		optionsMenu = mainMenu.addMenu("Options")
 		optionsMenu.addAction(self.htmlAction())
 		optionsMenu.addAction(self.terminalAction())
+		optionsMenu.addAction(self.editAction())
 		
 		appearancesMenu = mainMenu.addMenu("Appearances")
 		appearancesMenu.addAction(self.basicAction())
@@ -271,6 +284,7 @@ class Main(QtGui.QMainWindow):
 		
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")
+		# the same variables like in the initMenu function, so shortcuts wouldn't be ambigous
 		toolbar.addAction(self._newFile)
 		toolbar.addAction(self._openFile)
 		toolbar.addSeparator()
