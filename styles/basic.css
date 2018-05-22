@@ -1,0 +1,21 @@
+QTextEdit 
+{
+	background-color: white;
+	color: black;
+	selection-background-color: rgb(255, 150, 100);
+	selection-color: white;
+}
+
+QComboBox 
+{
+	background-color: white;
+	color: grey;
+	selection-background-color: black;
+	selection-color: white;
+}
+
+QStatusBar
+{
+	background-color: white;
+	color: gray;
+}

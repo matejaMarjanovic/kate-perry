@@ -9,6 +9,7 @@ class Main(QtGui.QMainWindow):
 		self._name = None
 		self.setWindowTitle("%s * Kate Perry" % self._name)
 		self.setWindowIcon(QtGui.QIcon("katePerryIcon.jpg"))
+		self.setBasic()
 	
 		self.line = 1
 		self.col = 1
@@ -94,6 +95,10 @@ class Main(QtGui.QMainWindow):
 	def setSky(self):
 		with open("./styles/sky.css", "r") as f:
 			self.setStyleSheet(f.read())
+			
+	def setBasic(self):
+		with open("./styles/basic.css", "r") as f:
+			self.setStyleSheet(f.read())
 	
 	def home(self):
 		self.initStatusBar()
@@ -120,7 +125,7 @@ class Main(QtGui.QMainWindow):
 	def newFileAction(self):
 		# new file action
 		newFileAction = QtGui.QAction("New", self)
-		newFileAction.setIcon(QtGui.QIcon('55.png'))
+		newFileAction.setIcon(QtGui.QIcon('./icons/55.png'))
 		newFileAction.setShortcut("Ctrl+N")
 		newFileAction.setStatusTip("New File")
 		newFileAction.triggered.connect(self.fileCreating)
@@ -129,7 +134,7 @@ class Main(QtGui.QMainWindow):
 	def openFileAction(self):
 		# open file action
 		openFileAction = QtGui.QAction("Open", self)
-		openFileAction.setIcon(QtGui.QIcon('open.jpg'))
+		openFileAction.setIcon(QtGui.QIcon('./icons/open.jpg'))
 		openFileAction.setShortcut("Ctrl+O")
 		openFileAction.setStatusTip("Open File")
 		openFileAction.triggered.connect(self.fileOpening)
@@ -138,7 +143,7 @@ class Main(QtGui.QMainWindow):
 	def saveAsFileAction(self):
 		# save as file action
 		saveAsFileAction = QtGui.QAction("Save As", self)
-		saveAsFileAction.setIcon(QtGui.QIcon('save_as.png'))
+		saveAsFileAction.setIcon(QtGui.QIcon('./icons/save_as.png'))
 		saveAsFileAction.setShortcut("Ctrl+Shift+S")
 		saveAsFileAction.setStatusTip("Save As File")
 		saveAsFileAction.triggered.connect(self.fileSavingAs)
@@ -147,7 +152,7 @@ class Main(QtGui.QMainWindow):
 	def saveFileAction(self):
 		# save file action
 		saveFileAction = QtGui.QAction("Save", self)
-		saveFileAction.setIcon(QtGui.QIcon('save.png'))
+		saveFileAction.setIcon(QtGui.QIcon('./icons/save.png'))
 		saveFileAction.setShortcut("Ctrl+S")
 		saveFileAction.setStatusTip("Save File")
 		saveFileAction.triggered.connect(self.fileSaving)
@@ -164,14 +169,14 @@ class Main(QtGui.QMainWindow):
 	def undoAction(self):
 		undoAction = QtGui.QAction("Undo", self)
 		undoAction.setShortcut("Ctrl+Z")
-		undoAction.setIcon(QtGui.QIcon('undo.png'))
+		undoAction.setIcon(QtGui.QIcon('./icons/undo.png'))
 		undoAction.triggered.connect(self.editor.undo)
 		return undoAction
 	
 	def redoAction(self):
 		redoAction = QtGui.QAction("Redo", self)
 		redoAction.setShortcut("Ctrl+Shift+Z")
-		redoAction.setIcon(QtGui.QIcon('redo.png'))
+		redoAction.setIcon(QtGui.QIcon('./icons/redo.png'))
 		redoAction.triggered.connect(self.editor.redo)
 		return redoAction
 	
@@ -214,6 +219,11 @@ class Main(QtGui.QMainWindow):
 		skyAction.triggered.connect(self.setSky)
 		return skyAction
 	
+	def basicAction(self):
+		basicAction = QtGui.QAction("Basic", self)
+		basicAction.triggered.connect(self.setBasic)
+		return basicAction
+	
 	def initMenu(self):        
 		# create the file drop menu and push all the actions in
 		mainMenu = self.menuBar()
@@ -245,6 +255,7 @@ class Main(QtGui.QMainWindow):
 		optionsMenu.addAction(self.htmlAction())
 		
 		appearancesMenu = mainMenu.addMenu("Appearances")
+		appearancesMenu.addAction(self.basicAction())
 		appearancesMenu.addAction(self.darkAction())
 		appearancesMenu.addAction(self.skyAction())
 		
