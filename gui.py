@@ -30,15 +30,30 @@ class Main(QMainWindow):
 		self.setCentralWidget(self.tab)
 		
 		
+		self.initStatusBar()
+		
 		self.editor = []
 		self.editor.append(QTextEdit(self.tab))
 		self.editor[self.tab.currentIndex()].cursorPositionChanged.connect(self.changeCursor)
+		
 		self.highlighter = []
-		self.highlighter.append(Highlighter(self.editor[self.tab.currentIndex()]))
+		if self.languageList.currentText() == 'C':
+			self.highlighter.append(Highlighter(self.editor[self.tab.currentIndex()]))
+		else:
+			self.highlighter.append(None)
 		
 		self.tab.addTab(self.editor[self.tab.currentIndex()], self._name)
+		self.tab.setTabsClosable(True)
+		self.tab.tabCloseRequested.connect(self.exitTab)
+		self.tab.setMovable(True)
 		
 		self.home()
+		
+	def exitTab(self, index):
+		widget = self.tab.widget(index)
+		if widget is not None:
+			widget.deleteLater()
+		self.tab.removeTab(index)
 		
 	def updateWindowTitle(self):
 		self.setWindowTitle("%s --- Kate Perry" % self._name.split("/")[-1])
@@ -136,12 +151,13 @@ class Main(QMainWindow):
 		self.tab.addTab(editor, "New tab")
 		
 		self.editor.append(editor)
-		#self.editor.append(QTextEdit())
-		self.highlighter.append(Highlighter(self.editor[-1]))
+		if self.languageList.currentText() == 'C':
+			self.highlighter.append(Highlighter(self.editor[-1]))
+		else:
+			self.highlighter.append(None)
 	
 	# add the main features
 	def home(self):
-		self.initStatusBar()
 		self.initMenu()
 		self.initFormatbar()	
 		self.show()
@@ -151,16 +167,20 @@ class Main(QMainWindow):
 		# a dirty trick so that the program writes Line 1, Column 1 in the begging
 		self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
 		
-		# does nothing :(
 		self.languageList = QComboBox()
 		self.languageList.addItems(["Plain Text", "C", "C++", "Java"])
 		self.languageList.activated.connect(self.changeLanguage)
 		self.statusbar.addPermanentWidget(self.languageList)
 	
 	def changeLanguage(self):
-		# set the autocompletion for the chosen language
-		print self.languageList.currentText()
-	
+		leng = len(self.editor)
+		if self.languageList.currentText() == 'C':
+			for i in range(leng):
+					self.highlighter[i] = Highlighter(self.editor[i])
+		else:
+			for i in range(leng):
+					self.highlighter[i] = None
+		
 	def newFileAction(self):
 		# new file action
 		newFileAction = QAction("New", self)
@@ -245,6 +265,7 @@ class Main(QMainWindow):
 	
 	def newTabAction(self):
 		newTabAction = QAction("New Tab", self)
+		newTabAction.setShortcut("Ctrl+T")
 		newTabAction.triggered.connect(self.newTab)
 		return newTabAction
 		
