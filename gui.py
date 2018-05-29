@@ -9,9 +9,10 @@ class Main(QMainWindow):
 		# standard initialization
 		super(Main, self).__init__()
 		self.setGeometry(50, 50, 800, 500)
-		self._name = None
+		self._name = "New Tab"
 		self.setWindowTitle("%s * Kate Perry" % self._name)
 		self.setWindowIcon(QIcon("katePerryIcon.jpg"))
+		
 		
 		# initial theme
 		self.setBasic()
@@ -24,19 +25,27 @@ class Main(QMainWindow):
 		self._currentSavedText = ""
 		
 		# set the text editor object on the window
-		self.editor = QTextEdit()
-		self.setCentralWidget(self.editor)
-		self.editor.cursorPositionChanged.connect(self.changeCursor)
+        
+		self.tab = QTabWidget(self)
+		self.setCentralWidget(self.tab)
 		
-		self.highlighter = Highlighter(self.editor)
+		
+		self.editor = []
+		self.editor.append(QTextEdit(self.tab))
+		self.editor[self.tab.currentIndex()].cursorPositionChanged.connect(self.changeCursor)
+		self.highlighter = []
+		self.highlighter.append(Highlighter(self.editor[self.tab.currentIndex()]))
+		
+		self.tab.addTab(self.editor[self.tab.currentIndex()], self._name)
 		
 		self.home()
 		
 	def updateWindowTitle(self):
 		self.setWindowTitle("%s --- Kate Perry" % self._name.split("/")[-1])
+		self.tab.setTabText(self.tab.currentIndex(), "%s" % self._name.split("/")[-1])
 	
 	def changeCursor(self):
-		cursorPos = self.editor.textCursor()
+		cursorPos = self.editor[self.tab.currentIndex()].textCursor()
 		
 		self.line = cursorPos.blockNumber() + 1
 		self.col = cursorPos.columnNumber() + 1
@@ -50,11 +59,11 @@ class Main(QMainWindow):
 			
 		# needs to know if the current version of the file is saved
 		with open(name, "w+") as f:
-			text = self.editor.toPlainText()
+			text = self.editor[self.tab.currentIndex()].toPlainText()
 			f.write(text)
 			
 		# fetches file name path
-		self._currentSavedText = self.editor.toPlainText()
+		self._currentSavedText = self.editor[self.tab.currentIndex()].toPlainText()
 		self.updateWindowTitle()
 	
 	def fileSaving(self):
@@ -64,25 +73,25 @@ class Main(QMainWindow):
 			
 		# needs to know if the current version of the file is saved
 		with open(self._name, "w+") as f:
-			text = self.editor.toPlainText()
+			text = self.editor[self.tab.currentIndex()].toPlainText()
 			f.write(text)
 			
 		self.updateWindowTitle()
-		self._currentSavedText = self.editor.toPlainText()
+		self._currentSavedText = self.editor[self.tab.currentIndex()].toPlainText()
 	
 	def fileOpening(self):
 		name = QFileDialog.getOpenFileName(self, "Open file")
 		with open(name, "r") as f:
 			text = f.read()
-			self.editor.setText(text)
+			self.editor[self.tab.currentIndex()].setText(text)
 		# fetches file name from absolute path
-		self._currentSavedText = self.editor.toPlainText()
+		self._currentSavedText = self.editor[self.tab.currentIndex()].toPlainText()
 		self._name = name
 		self.updateWindowTitle()
 		
 	def fileCreating(self):
 		name = None
-		self.editor.setText("")
+		self.editor[self.tab.currentIndex()].setText("")
 		self._name = name
 		self.updateWindowTitle()
 		
@@ -91,7 +100,7 @@ class Main(QMainWindow):
             # create a new file with a html extension
 			htmlFileName = self._name.split(".")[0] + ".html"
 			with open(htmlFileName, "w") as f:
-				f.write(self.editor.toHtml())
+				f.write(self.editor[self.tab.currentIndex()].toHtml())
 
 	# go to console mode
 	def termMode(self):
@@ -100,10 +109,12 @@ class Main(QMainWindow):
 	
 	# go to initial text edit mode
 	def editMode(self):	
-		self.editor = QTextEdit()
-		self.setCentralWidget(self.editor)
-		self.editor.cursorPositionChanged.connect(self.changeCursor)
-		self.highlighter = Highlighter(self.editor)
+		self.editor = []
+		
+		self.editor[self.tab.currentIndex()].append(QTextEdit())
+		self.setCentralWidget(self.editor[self.tab.currentIndex()])
+		self.editor[self.tab.currentIndex()].cursorPositionChanged.connect(self.changeCursor)
+		self.highlighter[self.tab.currentIndex()] = Highlighter(self.editor[self.tab.currentIndex()])
 	
 	# theme
 	def setDark(self):
@@ -119,6 +130,14 @@ class Main(QMainWindow):
 	def setBasic(self):
 		with open("./styles/basic.css", "r") as f:
 			self.setStyleSheet(f.read())
+			
+	def newTab(self):
+		editor = QTextEdit(self.tab)
+		self.tab.addTab(editor, "New tab")
+		
+		self.editor.append(editor)
+		#self.editor.append(QTextEdit())
+		self.highlighter.append(Highlighter(self.editor[-1]))
 	
 	# add the main features
 	def home(self):
@@ -190,40 +209,45 @@ class Main(QMainWindow):
 		undoAction = QAction("Undo", self)
 		undoAction.setShortcut("Ctrl+Z")
 		undoAction.setIcon(QIcon('./icons/undo.png'))
-		undoAction.triggered.connect(self.editor.undo)
+		undoAction.triggered.connect(self.editor[self.tab.currentIndex()].undo)
 		return undoAction
 	
 	def redoAction(self):
 		redoAction = QAction("Redo", self)
 		redoAction.setShortcut("Ctrl+Shift+Z")
 		redoAction.setIcon(QIcon('./icons/redo.png'))
-		redoAction.triggered.connect(self.editor.redo)
+		redoAction.triggered.connect(self.editor[self.tab.currentIndex()].redo)
 		return redoAction
 	
 	def copyAction(self):
 		copyAction = QAction("Copy", self)
 		copyAction.setShortcut("Ctrl+C")
-		copyAction.triggered.connect(self.editor.copy)
+		copyAction.triggered.connect(self.editor[self.tab.currentIndex()].copy)
 		return copyAction
 	
 	def pasteAction(self):
 		pasteAction = QAction("Paste", self)
 		pasteAction.setShortcut("Ctrl+V")
-		pasteAction.triggered.connect(self.editor.paste)
+		pasteAction.triggered.connect(self.editor[self.tab.currentIndex()].paste)
 		return pasteAction
 	
 	def cutAction(self):
 		cutAction = QAction("Cut", self)
 		cutAction.setShortcut("Ctrl+X")
-		cutAction.triggered.connect(self.editor.cut)
+		cutAction.triggered.connect(self.editor[self.tab.currentIndex()].cut)
 		return cutAction
 	
 	def selectAllAction(self):
 		selectAllAction = QAction("Select All", self)
 		selectAllAction.setShortcut("Ctrl+A")
-		selectAllAction.triggered.connect(self.editor.selectAll)
+		selectAllAction.triggered.connect(self.editor[self.tab.currentIndex()].selectAll)
 		return selectAllAction
 	
+	def newTabAction(self):
+		newTabAction = QAction("New Tab", self)
+		newTabAction.triggered.connect(self.newTab)
+		return newTabAction
+		
 	def htmlAction(self):
 		htmlAction = QAction("Export to HTML", self)
 		htmlAction.triggered.connect(self.htmlConversion)
@@ -287,7 +311,7 @@ class Main(QMainWindow):
 		appearancesMenu.addAction(self.basicAction())
 		appearancesMenu.addAction(self.darkAction())
 		appearancesMenu.addAction(self.skyAction())
-		
+	
 	def initFormatbar(self):
 		toolbar = self.addToolBar("Format")
 		# the same variables like in the initMenu function, so shortcuts wouldn't be ambigous
@@ -299,9 +323,11 @@ class Main(QMainWindow):
 		toolbar.addSeparator()
 		toolbar.addAction(self._undo)
 		toolbar.addAction(self._redo)
+		toolbar.addSeparator()
+		toolbar.addAction(self.newTabAction())
 		
 	def closeApp(self):
-		if self.editor.toPlainText() != self._currentSavedText:
+		if self.editor[self.tab.currentIndex()].toPlainText() != self._currentSavedText:
 			choice = QMessageBox.question(self, "Please don't leave", "Are you sure you want to leave without saving",
 											QMessageBox.Yes, QMessageBox.No)
 			if choice == QMessageBox.Yes:
