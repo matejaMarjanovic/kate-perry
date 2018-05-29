@@ -1,15 +1,17 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 from pyqterm import TerminalWidget
+from highlight import *
 
-class Main(QtGui.QMainWindow):
+class Main(QMainWindow):
 	def __init__(self):
 		# standard initialization
 		super(Main, self).__init__()
 		self.setGeometry(50, 50, 800, 500)
 		self._name = None
 		self.setWindowTitle("%s * Kate Perry" % self._name)
-		self.setWindowIcon(QtGui.QIcon("katePerryIcon.jpg"))
+		self.setWindowIcon(QIcon("katePerryIcon.jpg"))
 		
 		# initial theme
 		self.setBasic()
@@ -22,9 +24,11 @@ class Main(QtGui.QMainWindow):
 		self._currentSavedText = ""
 		
 		# set the text editor object on the window
-		self.editor = QtGui.QTextEdit()
+		self.editor = QTextEdit()
 		self.setCentralWidget(self.editor)
 		self.editor.cursorPositionChanged.connect(self.changeCursor)
+		
+		self.highlighter = Highlighter(self.editor)
 		
 		self.home()
 		
@@ -41,7 +45,7 @@ class Main(QtGui.QMainWindow):
 		self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
 	
 	def fileSavingAs(self):
-		name = QtGui.QFileDialog.getSaveFileName(self, "Save file")
+		name = QFileDialog.getSaveFileName(self, "Save file")
 		self._name = name
 			
 		# needs to know if the current version of the file is saved
@@ -67,7 +71,7 @@ class Main(QtGui.QMainWindow):
 		self._currentSavedText = self.editor.toPlainText()
 	
 	def fileOpening(self):
-		name = QtGui.QFileDialog.getOpenFileName(self, "Open file")
+		name = QFileDialog.getOpenFileName(self, "Open file")
 		with open(name, "r") as f:
 			text = f.read()
 			self.editor.setText(text)
@@ -91,13 +95,15 @@ class Main(QtGui.QMainWindow):
 
 	# go to console mode
 	def termMode(self):
-		self.setCentralWidget(TerminalWidget())
+		self.terminal = TerminalWidget()
+		self.setCentralWidget(self.terminal)
 	
 	# go to initial text edit mode
 	def editMode(self):	
-		self.editor = QtGui.QTextEdit()
+		self.editor = QTextEdit()
 		self.setCentralWidget(self.editor)
 		self.editor.cursorPositionChanged.connect(self.changeCursor)
+		self.highlighter = Highlighter(self.editor)
 	
 	# theme
 	def setDark(self):
@@ -127,7 +133,7 @@ class Main(QtGui.QMainWindow):
 		self.statusbar.showMessage("Line %d, Column %d" % (self.line, self.col))
 		
 		# does nothing :(
-		self.languageList = QtGui.QComboBox()
+		self.languageList = QComboBox()
 		self.languageList.addItems(["Plain Text", "C", "C++", "Java"])
 		self.languageList.activated.connect(self.changeLanguage)
 		self.statusbar.addPermanentWidget(self.languageList)
@@ -138,8 +144,8 @@ class Main(QtGui.QMainWindow):
 	
 	def newFileAction(self):
 		# new file action
-		newFileAction = QtGui.QAction("New", self)
-		newFileAction.setIcon(QtGui.QIcon('./icons/55.png'))
+		newFileAction = QAction("New", self)
+		newFileAction.setIcon(QIcon('./icons/55.png'))
 		newFileAction.setShortcut("Ctrl+N")
 		newFileAction.setStatusTip("New File")
 		newFileAction.triggered.connect(self.fileCreating)
@@ -147,8 +153,8 @@ class Main(QtGui.QMainWindow):
 	
 	def openFileAction(self):
 		# open file action
-		openFileAction = QtGui.QAction("Open", self)
-		openFileAction.setIcon(QtGui.QIcon('./icons/open.jpg'))
+		openFileAction = QAction("Open", self)
+		openFileAction.setIcon(QIcon('./icons/open.jpg'))
 		openFileAction.setShortcut("Ctrl+O")
 		openFileAction.setStatusTip("Open File")
 		openFileAction.triggered.connect(self.fileOpening)
@@ -156,8 +162,8 @@ class Main(QtGui.QMainWindow):
 	
 	def saveAsFileAction(self):
 		# save as file action
-		saveAsFileAction = QtGui.QAction("Save As", self)
-		saveAsFileAction.setIcon(QtGui.QIcon('./icons/save_as.png'))
+		saveAsFileAction = QAction("Save As", self)
+		saveAsFileAction.setIcon(QIcon('./icons/save_as.png'))
 		saveAsFileAction.setShortcut("Ctrl+Shift+S")
 		saveAsFileAction.setStatusTip("Save As File")
 		saveAsFileAction.triggered.connect(self.fileSavingAs)
@@ -165,8 +171,8 @@ class Main(QtGui.QMainWindow):
 	
 	def saveFileAction(self):
 		# save file action
-		saveFileAction = QtGui.QAction("Save", self)
-		saveFileAction.setIcon(QtGui.QIcon('./icons/save.png'))
+		saveFileAction = QAction("Save", self)
+		saveFileAction.setIcon(QIcon('./icons/save.png'))
 		saveFileAction.setShortcut("Ctrl+S")
 		saveFileAction.setStatusTip("Save File")
 		saveFileAction.triggered.connect(self.fileSaving)
@@ -174,77 +180,77 @@ class Main(QtGui.QMainWindow):
 		
 	def exitAction(self):
 		# exit Kate Perry
-		exitAction = QtGui.QAction("Exit Kate Perry", self)
+		exitAction = QAction("Exit Kate Perry", self)
 		exitAction.setShortcut("Ctrl+Q")
 		exitAction.setStatusTip("Leave")
 		exitAction.triggered.connect(self.closeApp)
 		return exitAction
 	
 	def undoAction(self):
-		undoAction = QtGui.QAction("Undo", self)
+		undoAction = QAction("Undo", self)
 		undoAction.setShortcut("Ctrl+Z")
-		undoAction.setIcon(QtGui.QIcon('./icons/undo.png'))
+		undoAction.setIcon(QIcon('./icons/undo.png'))
 		undoAction.triggered.connect(self.editor.undo)
 		return undoAction
 	
 	def redoAction(self):
-		redoAction = QtGui.QAction("Redo", self)
+		redoAction = QAction("Redo", self)
 		redoAction.setShortcut("Ctrl+Shift+Z")
-		redoAction.setIcon(QtGui.QIcon('./icons/redo.png'))
+		redoAction.setIcon(QIcon('./icons/redo.png'))
 		redoAction.triggered.connect(self.editor.redo)
 		return redoAction
 	
 	def copyAction(self):
-		copyAction = QtGui.QAction("Copy", self)
+		copyAction = QAction("Copy", self)
 		copyAction.setShortcut("Ctrl+C")
 		copyAction.triggered.connect(self.editor.copy)
 		return copyAction
 	
 	def pasteAction(self):
-		pasteAction = QtGui.QAction("Paste", self)
+		pasteAction = QAction("Paste", self)
 		pasteAction.setShortcut("Ctrl+V")
 		pasteAction.triggered.connect(self.editor.paste)
 		return pasteAction
 	
 	def cutAction(self):
-		cutAction = QtGui.QAction("Cut", self)
+		cutAction = QAction("Cut", self)
 		cutAction.setShortcut("Ctrl+X")
 		cutAction.triggered.connect(self.editor.cut)
 		return cutAction
 	
 	def selectAllAction(self):
-		selectAllAction = QtGui.QAction("Select All", self)
+		selectAllAction = QAction("Select All", self)
 		selectAllAction.setShortcut("Ctrl+A")
 		selectAllAction.triggered.connect(self.editor.selectAll)
 		return selectAllAction
 	
 	def htmlAction(self):
-		htmlAction = QtGui.QAction("Export to HTML", self)
+		htmlAction = QAction("Export to HTML", self)
 		htmlAction.triggered.connect(self.htmlConversion)
 		return htmlAction
 	
 	def terminalAction(self):
-		terminalAction = QtGui.QAction("Terminal Mode", self)
+		terminalAction = QAction("Terminal Mode", self)
 		terminalAction.triggered.connect(self.termMode)
 		return terminalAction
     
 	def editAction(self):
-		editAction = QtGui.QAction("Edit Mode", self)
+		editAction = QAction("Edit Mode", self)
 		editAction.triggered.connect(self.editMode)
 		return editAction
 	
 	def darkAction(self):
-		darkAction = QtGui.QAction("Dark", self)
+		darkAction = QAction("Dark", self)
 		darkAction.triggered.connect(self.setDark)
 		return darkAction
 	
 	def skyAction(self):
-		skyAction = QtGui.QAction("Sky Blue", self)
+		skyAction = QAction("Sky Blue", self)
 		skyAction.triggered.connect(self.setSky)
 		return skyAction
 	
 	def basicAction(self):
-		basicAction = QtGui.QAction("Basic", self)
+		basicAction = QAction("Basic", self)
 		basicAction.triggered.connect(self.setBasic)
 		return basicAction
 	
@@ -296,13 +302,13 @@ class Main(QtGui.QMainWindow):
 		
 	def closeApp(self):
 		if self.editor.toPlainText() != self._currentSavedText:
-			choice = QtGui.QMessageBox.question(self, "Please don't leave", "Are you sure you want to leave without saving",
-											QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-			if choice == QtGui.QMessageBox.Yes:
+			choice = QMessageBox.question(self, "Please don't leave", "Are you sure you want to leave without saving",
+											QMessageBox.Yes, QMessageBox.No)
+			if choice == QMessageBox.Yes:
 				sys.exit()
 		else:
 			sys.exit()
 
-app = QtGui.QApplication(sys.argv)
+app = QApplication(sys.argv)
 GUI = Main()
 sys.exit(app.exec_())
